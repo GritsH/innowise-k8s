@@ -37,4 +37,4 @@ build/
 .env
 .env.*
 
-/k8s/**/secrets.yml
+**/secrets.yml
