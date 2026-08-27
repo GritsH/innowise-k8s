@@ -37,4 +37,4 @@ build/
 .env
 .env.*
 
-**/secrets.yml
+**/secrets.yaml
