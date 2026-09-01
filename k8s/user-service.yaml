@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: innowise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+
+  template:
+    metadata:
+      labels:
+        app: user-service
+
+    spec:
+      hostAliases:
+        - ip: "192.168.65.254"
+          hostnames:
+            - "keycloak.local"
+
+      containers:
+        - name: user-service
+          image: user-service:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+
+            - name: DB_DATASOURCE_URL
+              value: "jdbc:postgresql://user-service-postgres:5432/postgres"
+
+            - name: DB_NAME
+              value: "postgres"
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: application-secrets
+                  key: USER_DB_USER
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: application-secrets
+                  key: USER_DB_PASSWORD
+
+          envFrom:
+            - configMapRef:
+                name: application-config
+
+            - secretRef:
+                name: application-secrets
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 5
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: innowise
+spec:
+  selector:
+    app: user-service
+  ports:
+    - port: 8080
+      targetPort: 8080

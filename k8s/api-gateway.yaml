@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  namespace: innowise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gateway
+
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+
+    spec:
+      hostAliases:
+        - ip: "192.168.65.254"
+          hostnames:
+            - "keycloak.local"
+
+      containers:
+        - name: api-gateway
+          image: api-gateway:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8085
+
+          env:
+            - name: SERVER_PORT
+              value: "8085"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+
+          envFrom:
+            - configMapRef:
+                name: application-config
+
+            - secretRef:
+                name: application-secrets
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8085
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8085
+            initialDelaySeconds: 30
+            periodSeconds: 10
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: innowise
+spec:
+  selector:
+    app: api-gateway
+
+  ports:
+    - port: 8085
+      targetPort: 8085
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-gateway-ingress
+  namespace: innowise
+
+spec:
+  rules:
+    - host: api.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway
+                port:
+                  number: 8085
