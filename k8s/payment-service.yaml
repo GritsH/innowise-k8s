@@ -36,7 +36,10 @@ spec:
               value: "docker"
 
             - name: MONGODB_URI
-              value: "mongodb://payment-service-mongodb:27017/paymentservice"
+              valueFrom:
+                secretKeyRef:
+                  name: application-secrets
+                  key: MONGODB_URI
 
           envFrom:
             - configMapRef:

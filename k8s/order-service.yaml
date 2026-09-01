@@ -36,10 +36,16 @@ spec:
               value: "docker"
 
             - name: DB_DATASOURCE_URL
-              value: "jdbc:postgresql://order-service-postgres:5432/postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: application-secrets
+                  key: ORDER_DB_URL
 
             - name: DB_NAME
-              value: "postgres"
+              valueFrom:
+                secretKeyRef:
+                  name: application-secrets
+                  key: ORDER_DB_NAME
 
             - name: DB_USER
               valueFrom:
