@@ -16,8 +16,6 @@ data:
   REDIS_PORT: "6379"
   REDIS_USERNAME: "default"
 
-  PAYMENT_MONGODB_URI: "mongodb://payment-service-mongodb:27017/paymentservice"
-
   KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
   API_GATEWAY_URL: "http://api-gateway:8085"
