@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authentication-service
+  namespace: innowise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authentication-service
+
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+
+    spec:
+      hostAliases:
+        - ip: "192.168.65.254"
+          hostnames:
+            - "keycloak.local"
+
+      containers:
+        - name: authentication-service
+          image: authentication-service:latest
+          imagePullPolicy: Never
+
+          ports:
+            - containerPort: 8082
+
+          env:
+            - name: SERVER_PORT
+              value: "8082"
+
+            - name: SPRING_PROFILES_ACTIVE
+              value: "docker"
+
+          envFrom:
+            - configMapRef:
+                name: application-config
+
+            - secretRef:
+                name: application-secrets
+
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8082
+            initialDelaySeconds: 20
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
